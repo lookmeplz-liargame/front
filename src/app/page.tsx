@@ -5,9 +5,15 @@ export default function Main() {
     <div className="min-h-screen bg-gradient-to-br from-black via-white to-gray-500 ">
       <header className="mb-8">
         <div className="flex items-center justify-center w-full h-28 px-8">
-          <h1 className="flex items-center text-5xl font-bold text-gray-800">
-            <img src="/img/fox.png" alt="logo" className="w-24 mr-4" />
-            Liar Game
+          <h1 className="flex items-center text-5xl font-bold text-gray-800 drop-shadow-lg">
+            <img
+              src="/img/fox.png"
+              alt="logo"
+              className="w-24 mr-4 drop-shadow-xl hover:scale-110 transition-transform duration-300"
+            />
+            <span className="bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Liar Game
+            </span>
           </h1>
         </div>
       </header>
