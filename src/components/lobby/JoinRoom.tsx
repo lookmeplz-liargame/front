@@ -1,7 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useGameStore } from "@/stores/gameStore";
 import JoinRoomModal from "@/components/ui/JoinRoomModal";
+import NickNameModal from "@/components/ui/NickNameModal";
 
 interface Props {
   open: boolean;
@@ -9,21 +12,45 @@ interface Props {
 }
 
 export default function JoinRoom({ open, onClose }: Props) {
-  const [roomCode, setRoomCode] = useState("");
+  const router = useRouter();
+  const [roomCodeInput, setRoomCodeInput] = useState("");
+  const [nicknameOpen, setNicknameOpen] = useState(false);
+
+  const { roomCode, setRoom, addPlayer } = useGameStore();
 
   const handleJoin = () => {
-    if (!roomCode) return alert("방 코드 입력해라");
-    console.log("방 입장:", roomCode);
+    if (!roomCodeInput.trim()) {
+      alert("방 코드를 입력하세요");
+      return;
+    }
+
+    setRoom(roomCodeInput.trim());
+
+    setNicknameOpen(true);
+  };
+
+  const handleConfirmNickname = (nickname: string) => {
+    addPlayer(nickname);
+    setNicknameOpen(false);
     onClose();
+    router.push("/game");
   };
 
   return (
-    <JoinRoomModal
-      open={open}
-      roomCode={roomCode}
-      onChangeRoomCode={setRoomCode}
-      onClose={onClose}
-      onJoin={handleJoin}
-    />
+    <>
+      <JoinRoomModal
+        open={open}
+        roomCode={roomCodeInput}
+        onChangeRoomCode={setRoomCodeInput}
+        onClose={onClose}
+        onConfirm={handleJoin}
+      />
+
+      <NickNameModal
+        open={nicknameOpen}
+        onClose={() => setNicknameOpen(false)}
+        onConfirm={handleConfirmNickname}
+      />
+    </>
   );
 }

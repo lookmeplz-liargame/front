@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useGameStore } from "@/stores/gameStore";
 import CreateRoomModal from "@/components/ui/CreateRoomModal";
+import NickNameModal from "@/components/ui/NickNameModal";
 
 interface Props {
   open: boolean;
@@ -9,12 +12,42 @@ interface Props {
 }
 
 export default function CreateRoom({ open, onClose }: Props) {
-  const handleCreate = () => {
-    console.log("방 코드 넣어도 ㄱㄴ?");
+  const router = useRouter();
+  const [nicknameOpen, setNicknameOpen] = useState(false);
+
+  const { roomCode, createRoom, addPlayer } = useGameStore();
+
+  useEffect(() => {
+    if (open) {
+      createRoom();
+    }
+  }, [open, createRoom]);
+
+  const handleConfirmRoom = () => {
+    if (roomCode) setNicknameOpen(true);
+  };
+
+  const handleConfirmNickname = (nickname: string) => {
+    addPlayer(nickname);
+    setNicknameOpen(false);
     onClose();
+    router.push("/game");
   };
 
   return (
-    <CreateRoomModal open={open} onClose={onClose} onCreate={handleCreate} />
+    <>
+      <CreateRoomModal
+        open={open}
+        roomCode={roomCode ?? ""}
+        onClose={onClose}
+        onConfirm={handleConfirmRoom}
+      />
+
+      <NickNameModal
+        open={nicknameOpen}
+        onClose={() => setNicknameOpen(false)}
+        onConfirm={handleConfirmNickname}
+      />
+    </>
   );
 }
