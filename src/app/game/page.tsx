@@ -23,7 +23,7 @@ export default function GamePage() {
   const [showPlayingModal, setShowPlayingModal] = useState(false);
   const [showEndedModal, setShowEndedModal] = useState(false);
 
-  const themes: Theme[] = ["동물", "직업", "음식"];
+  const themes: Theme[] = ["동물", "직업", "음식"]; //하드 코딩으로 그대로 가져옴
 
   const handleGameButton = () => {
     if (gameStatus === "waiting") {
