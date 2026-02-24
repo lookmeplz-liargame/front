@@ -29,7 +29,9 @@ export default function CreateRoomModal({
     setTimeout(() => setToast(null), 2000);
   };
 
-  // 🔹 open 상태가 바뀔 때마다 input 값이 바뀌도록 강제
+  // roomCode는 전역 상태에서 관리하지만 modal에서 표시하는 inputValue는 굳이 상태로 관리할 필요 없이 props로 가져오기만 하면 됨
+  // 문제 : 전역 상태인 roomcode는 초기화되지만 inputValue는 기존 값이 유지되어 이전 roomCode가 표시됨
+  // 해결 : roomCode를 초기화하고 modal을 다시 열면 inputValue도 함께 리렌더되어 최신 값이 표시됨
   const [inputValue, setInputValue] = useState(roomCode);
   useEffect(() => {
     if (open) setInputValue(roomCode);
