@@ -11,6 +11,7 @@ export default function GamePage() {
     roomCode,
     players,
     selectedTheme,
+    selectedItem,
     liar,
     gameStatus,
     setTheme,
@@ -107,6 +108,7 @@ export default function GamePage() {
       <PlayingGameModal
         open={showPlayingModal}
         theme={selectedTheme ?? ""}
+        item={selectedItem ?? ""}
         onClose={() => setShowPlayingModal(false)}
         onEndGame={() => {
           setShowPlayingModal(false);
@@ -117,7 +119,8 @@ export default function GamePage() {
       <EndedGameModal
         open={showEndedModal}
         theme={selectedTheme ?? ""}
-        result={liar ?? "없음"}
+        item={selectedItem ?? ""}
+        result={liar ?? ""}
         onClose={() => setShowEndedModal(false)}
         onReset={handleEndGameModalClose}
       />

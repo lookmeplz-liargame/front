@@ -6,6 +6,17 @@ export interface Player {
 
 export type Theme = "동물" | "직업" | "음식";
 
+export interface ThemeData {
+  name: Theme;
+  items: string[];
+}
+
+export const themeList: ThemeData[] = [
+  { name: "동물", items: ["강아지", "고양이", "코끼리", "호랑이"] },
+  { name: "직업", items: ["간호사", "의사", "선생님", "경찰"] },
+  { name: "음식", items: ["김치", "피자", "떡볶이"] },
+];
+
 export interface GameState {
   roomCode: string | null;
   players: Player[];

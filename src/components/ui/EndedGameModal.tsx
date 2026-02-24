@@ -7,6 +7,7 @@ interface Props {
   open: boolean;
   result: string;
   theme: string;
+  item: string;
   onClose: () => void;
   onReset: () => void;
 }
@@ -14,6 +15,7 @@ interface Props {
 export default function EndedGameModal({
   open,
   theme,
+  item,
   result,
   onClose,
   onReset,
@@ -23,7 +25,10 @@ export default function EndedGameModal({
       <h2 className="text-xl text-black font-bold mb-4 text-center">
         게임 종료
       </h2>
-      <p className="text-center text-red-600 mb-4">선택되었던 테마 : {theme}</p>
+      <p className="text-center text-red-600 mb-4">
+        선택되었던 테마 : {theme}, {item}
+      </p>
+
       <p className="text-center text-red-600 mb-4">
         마피아는 {result} 였습니다.
       </p>
