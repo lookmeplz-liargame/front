@@ -8,6 +8,7 @@ interface GameStore {
   players: Player[];
   selectedTheme: Theme | null;
   gameStatus: "waiting" | "playing" | "ended";
+  liar: string | null;
 
   createRoom: () => void;
   setRoom: (code: string) => void;
@@ -22,6 +23,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   players: [],
   selectedTheme: null,
   gameStatus: "waiting",
+  liar: null,
 
   createRoom: () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -35,6 +37,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       players: [],
       selectedTheme: null,
       gameStatus: "waiting",
+      liar: null,
     });
   },
 
@@ -54,7 +57,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setTheme: (theme) => set({ selectedTheme: theme }),
 
-  startGame: () => set({ gameStatus: "playing" }),
+  startGame: () =>
+    set((state) => {
+      const liar =
+        state.players.length > 0
+          ? state.players[Math.floor(Math.random() * state.players.length)]
+              .nickname
+          : null;
+
+      return {
+        gameStatus: "playing",
+        liar,
+      };
+    }),
 
   resetGame: () =>
     set({
@@ -62,5 +77,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       players: [],
       selectedTheme: null,
       gameStatus: "waiting",
+      liar: null,
     }),
 }));
