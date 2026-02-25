@@ -16,7 +16,7 @@ export default function JoinRoom({ open, onClose }: Props) {
   const [roomCodeInput, setRoomCodeInput] = useState("");
   const [nicknameOpen, setNicknameOpen] = useState(false);
 
-  const { roomCode, setRoom, addPlayer } = useGameStore();
+  const { createNickname, joinRoom } = useGameStore();
 
   const handleJoin = () => {
     if (!roomCodeInput.trim()) {
@@ -24,13 +24,16 @@ export default function JoinRoom({ open, onClose }: Props) {
       return;
     }
 
-    setRoom(roomCodeInput.trim());
-
     setNicknameOpen(true);
   };
 
-  const handleConfirmNickname = (nickname: string) => {
-    addPlayer(nickname);
+  const handleConfirmNickname = async (nickname: string) => {
+    const token = await createNickname(nickname);
+    if (!token) return;
+
+    const success = await joinRoom(roomCodeInput.trim());
+    if (!success) return;
+
     setNicknameOpen(false);
     onClose();
     router.push("/game");

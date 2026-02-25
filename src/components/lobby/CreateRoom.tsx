@@ -14,21 +14,34 @@ interface Props {
 export default function CreateRoom({ open, onClose }: Props) {
   const router = useRouter();
   const [nicknameOpen, setNicknameOpen] = useState(false);
+  const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
 
-  const { roomCode, createRoom, addPlayer } = useGameStore();
+  const { createRoom, createNickname, joinRoom } = useGameStore();
 
   useEffect(() => {
     if (open) {
-      createRoom();
+      (async () => {
+        const roomId = await createRoom();
+        setCreatedRoomId(roomId);
+      })();
     }
-  }, [open, createRoom]);
+  }, [open]);
 
   const handleConfirmRoom = () => {
-    if (roomCode) setNicknameOpen(true);
+    if (createdRoomId) {
+      setNicknameOpen(true);
+    }
   };
 
-  const handleConfirmNickname = (nickname: string) => {
-    addPlayer(nickname);
+  const handleConfirmNickname = async (nickname: string) => {
+    if (!createdRoomId) return;
+
+    const token = await createNickname(nickname);
+    if (!token) return;
+
+    const success = await joinRoom(createdRoomId);
+    if (!success) return;
+
     setNicknameOpen(false);
     onClose();
     router.push("/game");
@@ -38,7 +51,7 @@ export default function CreateRoom({ open, onClose }: Props) {
     <>
       <CreateRoomModal
         open={open}
-        roomCode={roomCode ?? ""}
+        roomCode={createdRoomId ?? ""}
         onClose={onClose}
         onConfirm={handleConfirmRoom}
       />

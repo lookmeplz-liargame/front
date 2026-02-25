@@ -1,6 +1,44 @@
 export interface Player {
   id: string;
   nickname: string;
+}
+
+export interface JoinSuccessPayload {
+  roomId: string;
+  nickname: string;
+  socketId: string;
+  members: string[]; // 백엔드가 string[] 보냄
+  maxPlayers: number;
+}
+
+export interface UserListPayload {
+  socketId: string;
+  nickname: string;
+  members: string[]; // 백엔드가 string[] 보냄
+}
+
+export interface GameInfoPayload {
+  role: "liar" | "citizen";
+  answer?: string; // 시민만
+  category?: string; // 라이어만 (백엔드 현재 구조)
+}
+
+export interface GameEndedPayload {
+  liarNickname: string;
+  answer: string;
+  category: string;
+}
+
+export interface ChatMessagePayload {
+  nickname: string;
+  message: string;
+  socketId: string;
+  time: string;
+}
+
+/*export interface Player {
+  id: string;
+  nickname: string;
   isHost: boolean;
 }
 
@@ -23,3 +61,4 @@ export interface GameState {
   selectedTheme: Theme | null;
   gameStatus: "waiting" | "playing" | "ended";
 }
+*/

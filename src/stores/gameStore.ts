@@ -1,21 +1,25 @@
 "use client";
 
 import { create } from "zustand";
-import { Player, Theme, ThemeData, themeList } from "@/types/game";
+import { Player } from "@/types/game";
 
 interface GameStore {
   roomCode: string | null;
   players: Player[];
-  selectedTheme: Theme | null;
+  selectedTheme: string | null;
   selectedItem: string | null;
   gameStatus: "waiting" | "playing" | "ended";
   liar: string | null;
+  token: string | null;
+  nickname: string | null;
 
-  createRoom: () => void;
-  setRoom: (code: string) => void;
-  addPlayer: (nickname: string) => void;
-  setTheme: (theme: Theme) => void;
-  startGame: () => void;
+  createRoom: () => Promise<string | null>;
+  createNickname: (nickname: string) => Promise<string | null>;
+  joinRoom: (roomId: string) => Promise<boolean>;
+
+  setPlayers: (players: Player[]) => void;
+  setGameResult: (theme: string, item: string, liar: string) => void;
+  endGame: () => void;
   resetGame: () => void;
 }
 
@@ -26,72 +30,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedItem: null,
   gameStatus: "waiting",
   liar: null,
+  token: null,
+  nickname: null,
 
-  createRoom: () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) {
-      code += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    set({
-      roomCode: code,
-      players: [],
-      selectedTheme: null,
-      selectedItem: null,
-      gameStatus: "waiting",
-      liar: null,
+  createRoom: async () => {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room/create`, {
+      method: "POST",
     });
+    if (!res.ok) return null;
+    const data = await res.json();
+    set({ roomCode: data.roomId });
+    return data.roomId;
   },
 
-  setRoom: (code) => set({ roomCode: code }),
-
-  addPlayer: (nickname) =>
-    set((state) => ({
-      players: [
-        ...state.players,
-        {
-          id: crypto.randomUUID(),
-          nickname,
-          isHost: state.players.length === 0,
-        },
-      ],
-    })),
-
-  setTheme: (theme) => {
-    set({ selectedTheme: theme, selectedItem: null });
+  createNickname: async (nickname: string) => {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/room/nickname`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname }),
+      },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const token = data.Authorization?.replace("Bearer ", "") ?? null;
+    const savedNickname = data.nickname ?? nickname; // ✅ 응답에서 nickname 가져오기
+    set({ token, nickname: savedNickname });
+    return token;
   },
 
-  startGame: () =>
-    set((state) => {
-      const themeData: ThemeData | undefined = themeList.find(
-        (t) => t.name === state.selectedTheme,
-      );
+  joinRoom: async (roomId: string) => {
+    const token = get().token;
+    if (!token) return false;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/room/join`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomId, jwtToken: `Bearer ${token}` }),
+    });
+    if (!res.ok) return false;
+    set({ roomCode: roomId });
+    return true;
+  },
 
-      // 랜덤으로 하나만 선택
-      const item =
-        themeData && themeData.items.length > 0
-          ? themeData.items[Math.floor(Math.random() * themeData.items.length)]
-          : null;
+  setPlayers: (players) => set({ players }),
 
-      const liar =
-        state.players.length > 0
-          ? state.players[Math.floor(Math.random() * state.players.length)]
-              .nickname
-          : null;
-
-      return {
-        gameStatus: "playing",
-        selectedItem: item,
-        liar,
-      };
+  setGameResult: (theme, item, liar) =>
+    set({
+      selectedTheme: theme,
+      selectedItem: item,
+      liar,
+      gameStatus: "playing",
     }),
+
+  endGame: () => set({ gameStatus: "ended" }),
 
   resetGame: () =>
     set({
       selectedTheme: null,
       selectedItem: null,
-      gameStatus: "waiting",
       liar: null,
+      gameStatus: "waiting",
     }),
 }));
