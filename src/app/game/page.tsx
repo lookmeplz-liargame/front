@@ -38,23 +38,33 @@ export default function GamePage() {
     const socket = getSocket();
     socketRef.current = socket;
 
+    // ✅ Register listeners BEFORE connecting so "connect" is never missed
     registerGameEvents(
       socket,
-      roomCode,
       token,
       nickname,
+      roomCode,
       setConnected,
       (msg) => setMessages((prev) => [...prev, msg]),
       setJoinError,
     );
 
-    socket.connect();
+    console.log(token);
+
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      // Already connected (StrictMode double-invoke / hot reload)
+      setConnected(true);
+      socket.emit("join", { roomId: roomCode, jwt: token });
+    }
 
     return () => {
+      // ✅ Remove listeners before disconnect to prevent duplicates on remount
+      socket.removeAllListeners();
       disconnectSocket();
     };
   }, [roomCode, token, nickname]);
-
   useEffect(() => {
     if (chatRef.current)
       chatRef.current.scrollTop = chatRef.current.scrollHeight;

@@ -19,8 +19,8 @@ export interface UserListPayload {
 
 export interface GameInfoPayload {
   role: "liar" | "citizen";
-  answer?: string; // 시민만
-  category?: string; // 라이어만 (백엔드 현재 구조)
+  answer?: string; 
+  category?: string;
 }
 
 export interface GameEndedPayload {
@@ -61,4 +61,5 @@ export interface GameState {
   selectedTheme: Theme | null;
   gameStatus: "waiting" | "playing" | "ended";
 }
+  로컬 테스트용
 */

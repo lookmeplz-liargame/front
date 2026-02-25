@@ -15,16 +15,21 @@ export const registerGameEvents = (
   socket: Socket,
   token: string,
   nickname: string,
+  roomCode: string,
   onConnected: (v: boolean) => void,
   onMessage: (msg: ChatMessagePayload) => void,
   onJoinError: (msg: string) => void,
 ) => {
+  // ✅ Guard: catch misconfigured call sites early
+  if (typeof onConnected !== "function") {
+    throw new Error("registerGameEvents: onConnected must be a function");
+  }
+
   const { setPlayers, setGameResult } = useGameStore.getState();
-  const roomId = "ef4e9e71-8127-4632-baa9-e5ffdf2f39f3";
 
   socket.on("connect", () => {
     onConnected(true);
-    socket.emit("join", { roomId, jwt: token });
+    socket.emit("join", { roomId: roomCode, jwt: `Bearer ${token}` });
   });
 
   socket.on("join_success", (data: JoinSuccessPayload) => {
