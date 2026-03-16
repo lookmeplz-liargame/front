@@ -1,4 +1,4 @@
-"use client";
+/*"use client";
 
 import { useState } from "react";
 import { useGameStore } from "@/stores/gameStore";
@@ -37,4 +37,5 @@ export function Gamestate() {
     handleEndGame,
     handleReset,
   };
-}
+}*/
+//따로 서버에서 받아오기때문에 거의 불 필요

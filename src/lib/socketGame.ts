@@ -19,13 +19,13 @@ export const registerGameEvents = (
   onConnected: (v: boolean) => void,
   onMessage: (msg: ChatMessagePayload) => void,
   onJoinError: (msg: string) => void,
+  onRole: (role: "citizen" | "liar") => void,
 ) => {
-  // ✅ Guard: catch misconfigured call sites early
   if (typeof onConnected !== "function") {
     throw new Error("registerGameEvents: onConnected must be a function");
   }
 
-  const { setPlayers, setGameResult } = useGameStore.getState();
+  const { setPlayers } = useGameStore.getState();
 
   socket.on("connect", () => {
     onConnected(true);
@@ -50,27 +50,80 @@ export const registerGameEvents = (
 
   socket.on("chat_message", (data: ChatMessagePayload) => {
     onMessage(data);
-  });
 
-  socket.on("game_info", (data: GameInfoPayload) => {
-    if (data.role === "liar") {
-      setGameResult(data.category || "", "", nickname);
-    } else {
-      setGameResult("", data.answer || "", "");
+    /*
+      ============================================================
+      🔧 트러블슈팅: 라이어 정답 체크 — 시민 클라이언트에서 판단
+
+      라이어는 answer(selectedItem)를 모름 → 직접 비교 불가.
+      시민은 answer를 알고 있고, chat_message로 누가 무슨 말을 쳤는지 수신함.
+
+      조건:
+        1. 내가 시민 (amILiar === false)
+        2. 내가 보낸 게 아님 (다른 사람이 보낸 채팅)
+        3. 그 메시지가 정답과 일치
+
+      → 라이어가 정답을 맞춘 것으로 간주하고 game_end emit.
+
+      game_end emit 직전에 setGameSnapshot으로
+      정답(selectedItem)과 라이어 닉네임(data.nickname)을 저장.
+      → 서버 game_ended payload가 null로 와도 모달에 정상 표시.
+      ============================================================
+    */
+    const store = useGameStore.getState();
+    const { selectedItem, liar, gameStatus } = store;
+    const amILiar = liar === nickname;
+
+    if (gameStatus !== "playing" || amILiar) return;
+
+    if (
+      selectedItem &&
+      data.nickname !== nickname &&
+      data.message.trim() === selectedItem.trim()
+    ) {
+      // game_end emit 전에 snapshot 저장 — 서버 null 대비
+      store.setGameSnapshot({
+        answer: selectedItem,
+        liar: data.nickname,
+      });
+      socket.emit("game_end");
     }
   });
 
-  socket.on("game_started", () => {});
+  socket.on("game_info", (data: GameInfoPayload) => {
+    const store = useGameStore.getState();
 
-  socket.on("game_ended", (data: GameEndedPayload) => {
-    setGameResult(data.category, data.answer, data.liarNickname);
+    if (data.role === "liar") {
+      store.setGameInfo(data.category || null, null);
+    } else {
+      store.setGameInfo(null, data.answer || null);
+    }
+
+    store.setGameStatus("playing");
+    onRole(data.role as "citizen" | "liar");
   });
 
+  socket.on("game_started", () => {
+    useGameStore.getState().setGameStatus("playing");
+  });
+
+  socket.on("game_ended", (data: GameEndedPayload) => {
+    console.log("[game_ended 페이로드]", data); // ← 이거 추가
+    useGameStore
+      .getState()
+      .setGameResult(data.category, data.answer, data.liarNickname);
+  });
   socket.on("game_error", (data: { message: string }) => {
     alert(data.message);
   });
 
   socket.on("disconnect", () => {
     onConnected(false);
+  });
+
+  socket.onAny((event, ...args) => {
+    if (event !== "chat_message") {
+      console.log(`[socket] 📨 ${event}`, args);
+    }
   });
 };

@@ -19,7 +19,7 @@ export interface UserListPayload {
 
 export interface GameInfoPayload {
   role: "liar" | "citizen";
-  answer?: string; 
+  answer?: string;
   category?: string;
 }
 
