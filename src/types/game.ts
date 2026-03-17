@@ -7,14 +7,14 @@ export interface JoinSuccessPayload {
   roomId: string;
   nickname: string;
   socketId: string;
-  members: string[]; // 백엔드가 string[] 보냄
+  members: string[]; 
   maxPlayers: number;
 }
 
 export interface UserListPayload {
   socketId: string;
   nickname: string;
-  members: string[]; // 백엔드가 string[] 보냄
+  members: string[]; 
 }
 
 export interface GameInfoPayload {
