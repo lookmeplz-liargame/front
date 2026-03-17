@@ -19,7 +19,7 @@ interface GameStore {
   nickname: string | null;
 
   /*
-    🔧 트러블슈팅: gameSnapshot — 모달 표시용 최종 데이터
+    트러블슈팅: gameSnapshot — 모달 표시용 최종 데이터
 
     각 클라이언트가 아는 정보:
       시민:   selectedItem(정답) O  / liar(라이어닉네임) X
@@ -134,7 +134,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   /*
     ============================================================
-    🔧 트러블슈팅: setGameResult — snapshot 우선, null 방어
+    트러블슈팅: setGameResult — snapshot 우선, null 방어
 
     우선순위:
     1. gameSnapshot (시민이 game_end 직전에 저장한 값) ← 가장 정확

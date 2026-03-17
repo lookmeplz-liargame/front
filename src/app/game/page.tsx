@@ -280,3 +280,5 @@ export default function GamePage() {
     </>
   );
 }
+
+//따로 분리 예정 비교군으로 분리한 컴포넌트와 아닌것

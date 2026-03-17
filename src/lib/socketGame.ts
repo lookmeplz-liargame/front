@@ -53,7 +53,7 @@ export const registerGameEvents = (
 
     /*
       ============================================================
-      🔧 트러블슈팅: 라이어 정답 체크 — 시민 클라이언트에서 판단
+      트러블슈팅: 라이어 정답 체크 — 시민 클라이언트에서 판단
 
       라이어는 answer(selectedItem)를 모름 → 직접 비교 불가.
       시민은 answer를 알고 있고, chat_message로 누가 무슨 말을 쳤는지 수신함.
@@ -81,7 +81,6 @@ export const registerGameEvents = (
       data.nickname !== nickname &&
       data.message.trim() === selectedItem.trim()
     ) {
-      // game_end emit 전에 snapshot 저장 — 서버 null 대비
       store.setGameSnapshot({
         answer: selectedItem,
         liar: data.nickname,
@@ -108,7 +107,6 @@ export const registerGameEvents = (
   });
 
   socket.on("game_ended", (data: GameEndedPayload) => {
-    console.log("[game_ended 페이로드]", data); // ← 이거 추가
     useGameStore
       .getState()
       .setGameResult(data.category, data.answer, data.liarNickname);
