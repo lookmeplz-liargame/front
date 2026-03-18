@@ -31,7 +31,6 @@ Next.js + Socket.io 기반으로 구현된 실시간 웹 게임입니다.
 ---
 
 ## 프로젝트 구조
-
 ```
 src/
 ├── app/                        # Next.js App Router 페이지
@@ -44,6 +43,12 @@ src/
 │       └── page.tsx            # 게임 페이지 (채팅 & 게임 로직)
 │
 ├── components/
+│   ├── game/                   # 게임 전용 컴포넌트
+│   │   ├── GameHeader.tsx      # 방 코드 & 게임 제어 버튼
+│   │   ├── RoleBox.tsx         # 역할 표시 (라이어/시민)
+│   │   ├── PlayerList.tsx      # 접속 인원 목록
+│   │   └── ChatBox.tsx         # 실시간 채팅 UI
+│   │
 │   ├── lobby/                  # 로비 전용 컴포넌트
 │   │   ├── Action.tsx          # 방 생성/참가 버튼 영역
 │   │   ├── CreateRoom.tsx      # 방 생성 플로우
@@ -56,6 +61,7 @@ src/
 │       ├── CreateRoomModal.tsx # 방 코드 표시 & 복사
 │       ├── JoinRoomModal.tsx   # 방 코드 입력
 │       ├── NickNameModal.tsx   # 닉네임 입력
+│       ├── IntroduceModal.tsx  # 게임 방법 안내 모달
 │       └── EndedGameModal.tsx  # 게임 종료 결과 표시
 │
 ├── lib/
@@ -80,9 +86,8 @@ src/
 - 백엔드 서버 실행 중 (API 서버 + WebSocket 서버)
 
 ### 설치
-
 ```bash
-git clone https://github.com/your-org/front.git
+git clone https://github.com/lookmeplz-liargame/front.git
 cd front
 npm install
 ```
@@ -90,16 +95,15 @@ npm install
 ### 환경 변수 설정
 
 프로젝트 루트에 `.env.local` 파일을 생성합니다.
-
 ```env
 # 백엔드 REST API 주소
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://api서버주소
+
+# WebSocket 서버 주소 (HTTPS 기반 보안 연결)
+NEXT_PUBLIC_WS_URL=https://소켓서버주소
 ```
 
-> **참고**: WebSocket 서버 주소는 현재 `src/lib/socket.ts`에 `http://localhost:5001/game`으로 고정되어 있습니다.
-
 ### 개발 서버 실행
-
 ```bash
 npm run dev
 ```
@@ -107,7 +111,6 @@ npm run dev
 브라우저에서 [http://localhost:3000](http://localhost:3000) 으로 접속합니다.
 
 ### 프로덕션 빌드
-
 ```bash
 npm run build
 npm start
@@ -131,9 +134,9 @@ npm start
 - **역할 배정**: 게임 시작 시 자동으로 라이어/시민 역할 부여
   - 시민: 정답 단어 표시
   - 라이어: 카테고리(주제)만 표시
-- **게임 제어**: 방장이 게임 시작/종료 가능
-- **자동 감지**: 시민이 라이어의 정답 맞히기를 채팅에서 자동 감지
-- **결과 모달**: 게임 종료 시 라이어 정체 공개
+- **게임 제어**: 최소 2명 이상 시 게임 시작 가능
+- **자동 감지**: 채팅에서 라이어의 정답 맞히기를 클라이언트에서 자동 감지
+- **결과 모달**: 게임 종료 시 라이어 정체 및 정답 공개
 
 ---
 
@@ -181,33 +184,28 @@ npm start
 [Zustand](https://zustand-demo.pmnd.rs/)를 사용하며 `src/stores/gameStore.ts`에 정의되어 있습니다.
 
 **주요 상태**
-
 ```ts
-roomCode; // 현재 방 코드
-players; // 플레이어 목록
-nickname; // 내 닉네임
-token; // JWT 인증 토큰
-gameStatus; // 게임 상태 (waiting | playing | ended)
+roomCode;      // 현재 방 코드
+players;       // 플레이어 목록
+nickname;      // 내 닉네임
+token;         // JWT 인증 토큰
+gameStatus;    // 게임 상태 (waiting | playing | ended)
 selectedTheme; // 게임 카테고리 (라이어에게 보임)
-selectedItem; // 게임 정답 (시민에게 보임)
-liar; // 라이어 플레이어 정보
+selectedItem;  // 게임 정답 (시민에게 보임)
 ```
 
 **주요 액션**
-
 ```ts
-createRoom(); // 방 생성
-joinRoom(); // 방 참가
+createRoom();     // 방 생성
+joinRoom();       // 방 참가
 createNickname(); // 닉네임 등록
-setGameInfo(); // 게임 정보 설정
-setGameResult(); // 게임 결과 설정
-resetGame(); // 상태 초기화
+setGameInfo();    // 게임 정보 설정
+resetGame();      // 상태 초기화
 ```
 
 ---
 
 ## 스크립트
-
 ```bash
 npm run dev    # 개발 서버 실행 (hot reload)
 npm run build  # 프로덕션 빌드
@@ -219,10 +217,11 @@ npm run lint   # ESLint 코드 검사
 
 ## 아키텍처 특이사항
 
-- **클라이언트 사이드 라이어 감지**: 서버 부하를 줄이기 위해 채팅 메시지에서 라이어의 정답 맞히기를 클라이언트에서 감지합니다.
-- **Snapshot 패턴**: 서버 데이터 불일치(null 값) 처리를 위한 스냅샷 구조가 적용되어 있습니다.
+- **클라이언트 사이드 라이어 감지**: 채팅 메시지에서 라이어의 정답 맞히기를 클라이언트에서 감지하여 서버 부하를 줄입니다.
+- **로컬 State 결과 처리**: 서버 `game_ended` 페이로드를 `gameStore` 거치지 않고 로컬 state에 직접 저장하여 결과값 null 표시 문제를 해결했습니다.
 - **JWT 인증**: 닉네임 등록 후 발급된 토큰으로 소켓 연결을 인증합니다.
 - **싱글톤 소켓**: `src/lib/socket.ts`에서 Socket.io 인스턴스를 싱글톤으로 관리합니다.
+- **컴포넌트 분리**: 게임 페이지를 `GameHeader`, `RoleBox`, `PlayerList`, `ChatBox` 로 분리하여 유지보수성을 높였습니다.
 
 ---
 
