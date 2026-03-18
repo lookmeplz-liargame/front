@@ -32,7 +32,10 @@ export default function JoinRoom({ open, onClose }: Props) {
     if (!token) return;
 
     const success = await joinRoom(roomCodeInput.trim());
-    if (!success) return;
+    if (!success) {
+      alert("방이 존재하지 않습니다.");
+      return;
+    }
 
     setNicknameOpen(false);
     onClose();
