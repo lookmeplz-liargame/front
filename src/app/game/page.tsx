@@ -8,6 +8,7 @@ import { getSocket, disconnectSocket } from "@/lib/socket";
 import { registerGameEvents } from "@/lib/socketGame";
 import { ChatMessagePayload } from "@/types/game";
 import EndedGameModal from "@/components/ui/EndedGameModal";
+import IntroduceModal from "@/components/ui/IntroduceModal";
 
 export default function GamePage() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function GamePage() {
   const [showEndModal, setShowEndModal] = useState(false);
   const [myRole, setMyRole] = useState<"citizen" | "liar" | null>(null);
   const isLiar = myRole === "liar";
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   useEffect(() => {
     if (!roomCode || !token || !nickname) return;
@@ -100,6 +102,11 @@ export default function GamePage() {
     /room/quit API를 먼저 호출해서 서버에서 멤버 제거 후 소켓 종료.
     실패해도 소켓은 끊고 홈으로 이동 (에러 무시).
   */
+
+  useEffect(() => {
+    if (connected) setShowGuideModal(true);
+  }, [connected]);
+
   const handleExitRoom = async () => {
     if (roomCode) {
       try {
@@ -271,6 +278,10 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+      <IntroduceModal
+        open={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+      />
 
       <EndedGameModal
         open={showEndModal}
