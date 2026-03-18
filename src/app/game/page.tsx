@@ -88,6 +88,41 @@ export default function GamePage() {
 
   const handleGameStart = () => socketRef.current?.emit("game_start");
   const handleGameEnd = () => socketRef.current?.emit("game_end");
+  /*
+  const handleGameEnd = () => {
+  const store = useGameStore.getState();
+
+  if (!isLiar && store.selectedItem) {
+    socketRef.current?.emit("chat", { message: store.selectedItem });
+  } else if (isLiar) {
+    store.setGameSnapshot({
+      answer: store.selectedItem ?? null,
+      liar: store.liar, // 본인 닉네임
+    });
+  }
+
+  setTimeout(() => {
+    socketRef.current?.emit("game_end");
+  }, 800);
+};
+ 트러블슈팅: 종료 버튼 누를 때 라이어 공개 문제
+
+  서버 game_ended 페이로드가 null로 와서
+  클라이언트가 라이어 닉네임을 알 수 없음.
+
+  해결:
+  시민이 종료 누를 때:
+    정답을 채팅으로 먼저 emit
+    → chat_message 이벤트에서 라이어 감지 로직 동작
+    → setGameSnapshot으로 라이어 닉네임 저장
+
+  라이어가 종료 누를 때:
+    store.liar(본인 닉네임)으로 snapshot 직접 저장
+
+  → game_ended 수신 후 snapshot 우선 사용하여 모달 정상 표시.
+  800ms 딜레이: chat_message 처리 후 game_end emit하기 위함.
+  //할려했으나 결국 백엔드 서버에서 통합적으로 보여주는게 낫기때문에 보류
+  */
 
   /*
     🔧 방 나가기 — REST API 호출 추가
