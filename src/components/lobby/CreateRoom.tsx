@@ -22,6 +22,11 @@ export default function CreateRoom({ open, onClose }: Props) {
     if (open) {
       (async () => {
         const roomId = await createRoom();
+        if (!roomId) {
+          alert("방 생성에 실패했습니다.");
+          onClose();
+          return;
+        }
         setCreatedRoomId(roomId);
       })();
     }
