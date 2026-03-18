@@ -2,20 +2,21 @@
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/ModalButton";
-import { useGameStore } from "@/stores/gameStore";
+import { GameEndedPayload } from "@/types/game";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onReset: () => void;
+  revealData: GameEndedPayload | null;
 }
 
-export default function EndedGameModal({ open, onClose, onReset }: Props) {
-  const { gameSnapshot, selectedItem, liar } = useGameStore();
-
-  const answer = gameSnapshot?.answer ?? selectedItem;
-  const liarName = gameSnapshot?.liar ?? liar;
-
+export default function EndedGameModal({
+  open,
+  onClose,
+  onReset,
+  revealData,
+}: Props) {
   return (
     <Modal open={open} onClose={onClose}>
       <h2 className="text-xl text-black font-bold mb-6 text-center">
@@ -26,7 +27,19 @@ export default function EndedGameModal({ open, onClose, onReset }: Props) {
         <div className="flex justify-between items-center bg-red-50 rounded-lg px-4 py-3">
           <span className="text-gray-500 text-sm">라이어</span>
           <span className="text-red-600 font-bold">
-            {liarName || "알 수 없음"}
+            {revealData?.liarNickname || "알 수 없음"}
+          </span>
+        </div>
+        <div className="flex justify-between items-center bg-blue-50 rounded-lg px-4 py-3">
+          <span className="text-gray-500 text-sm">정답</span>
+          <span className="text-blue-600 font-bold">
+            {revealData?.answer || "알 수 없음"}
+          </span>
+        </div>
+        <div className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3">
+          <span className="text-gray-500 text-sm">카테고리</span>
+          <span className="text-gray-600 font-bold">
+            {revealData?.category || "알 수 없음"}
           </span>
         </div>
       </div>

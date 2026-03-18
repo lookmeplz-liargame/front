@@ -6,7 +6,7 @@ import { Socket } from "socket.io-client";
 import { useGameStore } from "@/stores/gameStore";
 import { getSocket, disconnectSocket } from "@/lib/socket";
 import { registerGameEvents } from "@/lib/socketGame";
-import { ChatMessagePayload } from "@/types/game";
+import { ChatMessagePayload, GameEndedPayload } from "@/types/game";
 import EndedGameModal from "@/components/ui/EndedGameModal";
 import IntroduceModal from "@/components/ui/IntroduceModal";
 
@@ -35,6 +35,12 @@ export default function GamePage() {
   const isLiar = myRole === "liar";
   const [showGuideModal, setShowGuideModal] = useState(false);
 
+  /*
+    트러블슈팅: gameStore 통하면 우선순위 문제로 null 표시됨.
+    서버 game_ended 페이로드를 로컬 state에 바로 저장해서 해결.
+  */
+  const [revealData, setRevealData] = useState<GameEndedPayload | null>(null);
+
   useEffect(() => {
     if (!roomCode || !token || !nickname) return;
 
@@ -53,6 +59,10 @@ export default function GamePage() {
         setShowEndModal(false);
         setMyRole(role);
         setMessages([]);
+      },
+      (data) => {
+        setRevealData(data);
+        setShowEndModal(true);
       },
     );
 
@@ -75,10 +85,8 @@ export default function GamePage() {
   }, [messages]);
 
   useEffect(() => {
-    if (gameStatus === "ended") {
-      setShowEndModal(true);
-    }
-  }, [gameStatus]);
+    if (connected) setShowGuideModal(true);
+  }, [connected]);
 
   const handleSendMessage = () => {
     if (!chatInput.trim() || !socketRef.current) return;
@@ -88,41 +96,6 @@ export default function GamePage() {
 
   const handleGameStart = () => socketRef.current?.emit("game_start");
   const handleGameEnd = () => socketRef.current?.emit("game_end");
-  /*
-  const handleGameEnd = () => {
-  const store = useGameStore.getState();
-
-  if (!isLiar && store.selectedItem) {
-    socketRef.current?.emit("chat", { message: store.selectedItem });
-  } else if (isLiar) {
-    store.setGameSnapshot({
-      answer: store.selectedItem ?? null,
-      liar: store.liar, // 본인 닉네임
-    });
-  }
-
-  setTimeout(() => {
-    socketRef.current?.emit("game_end");
-  }, 800);
-};
- 트러블슈팅: 종료 버튼 누를 때 라이어 공개 문제
-
-  서버 game_ended 페이로드가 null로 와서
-  클라이언트가 라이어 닉네임을 알 수 없음.
-
-  해결:
-  시민이 종료 누를 때:
-    정답을 채팅으로 먼저 emit
-    → chat_message 이벤트에서 라이어 감지 로직 동작
-    → setGameSnapshot으로 라이어 닉네임 저장
-
-  라이어가 종료 누를 때:
-    store.liar(본인 닉네임)으로 snapshot 직접 저장
-
-  → game_ended 수신 후 snapshot 우선 사용하여 모달 정상 표시.
-  800ms 딜레이: chat_message 처리 후 game_end emit하기 위함.
-  //할려했으나 결국 백엔드 서버에서 통합적으로 보여주는게 낫기때문에 보류
-  */
 
   /*
     🔧 방 나가기 — REST API 호출 추가
@@ -137,11 +110,6 @@ export default function GamePage() {
     /room/quit API를 먼저 호출해서 서버에서 멤버 제거 후 소켓 종료.
     실패해도 소켓은 끊고 홈으로 이동 (에러 무시).
   */
-
-  useEffect(() => {
-    if (connected) setShowGuideModal(true);
-  }, [connected]);
-
   const handleExitRoom = async () => {
     if (roomCode) {
       try {
@@ -165,6 +133,7 @@ export default function GamePage() {
 
   const handleReset = () => {
     setShowEndModal(false);
+    setRevealData(null);
     setMyRole(null);
     resetGame();
   };
@@ -193,9 +162,15 @@ export default function GamePage() {
             <h1 className="text-xl font-bold">방 코드: {roomCode}</h1>
             <div className="flex gap-2">
               {gameStatus === "waiting" && (
+                /*
+                  최소 2명 미만이면 게임 시작 버튼 비활성화.
+                  서버에서도 2명 미만이면 game_error 반환하지만
+                  UX상 프론트에서도 막아둠.
+                */
                 <button
                   onClick={handleGameStart}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded-xl text-sm font-bold shadow-md transition"
+                  disabled={players.length < 2}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-400 rounded-xl text-sm font-bold shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   게임 시작
                 </button>
@@ -317,9 +292,9 @@ export default function GamePage() {
         open={showGuideModal}
         onClose={() => setShowGuideModal(false)}
       />
-
       <EndedGameModal
         open={showEndModal}
+        revealData={revealData}
         onClose={() => setShowEndModal(false)}
         onReset={handleReset}
       />
@@ -327,4 +302,4 @@ export default function GamePage() {
   );
 }
 
-//따로 분리 예정 비교군으로 분리한 컴포넌트와 아닌것
+// 따로 분리 예정 비교군으로 분리한 컴포넌트와 아닌것
