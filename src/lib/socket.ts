@@ -6,7 +6,7 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(`http://localhost:5001/game`, {
+    socket = io(`${process.env.NEXT_PUBLIC_WS_URL}/game`, {
       transports: ["websocket"],
       autoConnect: false,
     });
