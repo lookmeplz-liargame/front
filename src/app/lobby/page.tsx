@@ -14,7 +14,11 @@ export default function Main() {
       <header className="mb-8">
         <div className="flex items-center justify-center w-full h-28 px-8">
           <h1 className="flex items-center text-5xl font-bold text-gray-800 drop-shadow-lg">
-            <a href="https://github.com/lookmeplz-liargame/front">
+            <a
+              href="https://github.com/lookmeplz-liargame/front"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img
                 src="/img/fox.png"
                 alt="logo"
