@@ -44,7 +44,7 @@ interface GameStore {
 
   createRoom: () => Promise<string | null>;
   createNickname: (nickname: string) => Promise<string | null>;
-  joinRoom: (roomId: string) => Promise<boolean>;
+  joinRoom: (roomId: string) => Promise<boolean | "NOT_FOUND">;
 
   setPlayers: (players: Player[]) => void;
   setGameInfo: (theme: string | null, item: string | null) => void;
@@ -103,6 +103,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ roomId, jwtToken: `Bearer ${token}` }),
     });
+    if (res.status === 404) return "NOT_FOUND";
     if (!res.ok) return false;
     set({ roomCode: roomId });
     return true;
